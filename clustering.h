@@ -214,7 +214,7 @@ void clustering_dac(std::vector<T> &data, int data_length, int N_max_size_extern
 
 
 /**
-* A try of a multithreaded implementation
+* A multithreaded implementation
 **/
 template <typename T>
 void clustering_dac_multithread(std::vector<T> *data, int data_length, int N_max_size_external_set, double (*distance_measure)(T&,T&), int max_depth, int depth = 0)
@@ -228,10 +228,8 @@ void clustering_dac_multithread(std::vector<T> *data, int data_length, int N_max
         if (depth < max_depth)
         {
             // One thread for each division
-            int length_right = data_length-half_length;
-            int new_depth = depth+1;
-            std::thread thread_left(&clustering_dac_multithread<T>, &left, half_length, N_max_size_external_set, distance_measure, max_depth, new_depth);
-            std::thread thread_right(&clustering_dac_multithread<T>, &right, length_right, N_max_size_external_set, distance_measure, max_depth, new_depth);
+            std::thread thread_left(&clustering_dac_multithread<T>, &left, half_length, N_max_size_external_set, distance_measure, max_depth, depth+1);
+            std::thread thread_right(&clustering_dac_multithread<T>, &right, data_length-half_length, N_max_size_external_set, distance_measure, max_depth, depth+1);
 
             // Joining threads
             thread_left.join();

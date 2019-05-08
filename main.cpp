@@ -10,7 +10,7 @@
 /**
 * Functions to generate a graph output using python, just utility
 **/
-std::ofstream python_init_graph(std::size_t grid_size, std::size_t target_size)
+std::ofstream python_init_graph(int grid_size, int target_size)
 {
     std::ofstream stream(std::to_string(grid_size) + std::string("_") + std::to_string(target_size) + std::string("_plot.py"));
     stream << "import matplotlib.pyplot as plt" << std::endl;
@@ -37,7 +37,7 @@ void python_plot(std::ofstream &stream, std::vector<std::pair<int,int>> &points,
         stream << yAxis[q] << ",";
     stream << yAxis[yAxis.size()-1] << "]" << (point ? ",'o'" : "") << ")" << std::endl;
 }
-void python_generate(std::ofstream &stream, std::size_t grid_size, std::size_t target_size)
+void python_generate(std::ofstream &stream, int grid_size, int target_size)
 {
     stream << "fig.savefig('" << grid_size << "_" << target_size << ".png')" << std::endl;
     stream.close();
@@ -53,6 +53,16 @@ double euclidian_distance(std::pair<int,int> &p1, std::pair<int,int> &p2)
     return sqrt(first_param*first_param + second_param*second_param);
 }
 
+/**
+* A collection of test functions
+**/
+void test_data_grid(std::vector<std::pair<int,int>> &container, int grid_size)
+{
+    for (int i=0; i<grid_size; ++i)
+    for (int j=0; j<grid_size; ++j)
+        container.push_back(std::make_pair(i,j));
+}
+
 int main(int argc, char** argv)
 {
     int grid_size = std::stoi(argv[1]);
@@ -61,11 +71,9 @@ int main(int argc, char** argv)
     std::vector<std::pair<int,int>> test_data;
     auto stream = python_init_graph(grid_size, target_size);
 
-    for (int i=0; i<grid_size; ++i)
-    for (int j=0; j<grid_size; ++j)
-        test_data.push_back(std::make_pair(i,j));
-
+    test_data_grid(test_data, grid_size);
     int test_data_length = test_data.size();
+
     auto start = std::chrono::steady_clock::now();
 
     //clustering_dac(test_data, test_data_length, target_size, euclidian_distance);
