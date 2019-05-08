@@ -55,23 +55,27 @@ double euclidian_distance(std::pair<int,int> &p1, std::pair<int,int> &p2)
 
 int main(int argc, char** argv)
 {
-    std::size_t grid_size = std::stoi(argv[1]);
-    std::size_t target_size = std::stoi(argv[2]);
+    int grid_size = std::stoi(argv[1]);
+    int target_size = std::stoi(argv[2]);
 
-    std::vector<std::pair<int,int>> testData;
+    std::vector<std::pair<int,int>> test_data;
     auto stream = python_init_graph(grid_size, target_size);
 
-    for (std::size_t i=0; i<grid_size; ++i)
-    for (std::size_t j=0; j<grid_size; ++j)
-        testData.push_back(std::make_pair(i,j));
+    for (int i=0; i<grid_size; ++i)
+    for (int j=0; j<grid_size; ++j)
+        test_data.push_back(std::make_pair(i,j));
 
+    int test_data_length = test_data.size();
+    int max_threading_depth = 4;
+    int initial_depth = 0;
     auto start = std::chrono::steady_clock::now();
 
-    clustering_dac(testData, testData.size(), target_size, euclidian_distance);
+    //clustering_dac(test_data, test_data_length, target_size, euclidian_distance);
+    clustering_dac_multithread(&test_data, test_data_length, target_size, euclidian_distance, max_threading_depth, initial_depth);
 
     auto end = std::chrono::steady_clock::now();
 
-    python_plot(stream, testData, true);
+    python_plot(stream, test_data, true);
     python_generate(stream, grid_size, target_size);
 
     auto diff = end - start;

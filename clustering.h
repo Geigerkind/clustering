@@ -3,6 +3,8 @@
 #include<math.h>
 #include<iterator>
 
+#include <thread>
+
 template <typename T>
 void clustering(std::vector<T> &data, int N_max_size_external_set, double (*distance_measure)(T&,T&))
 {
@@ -208,4 +210,43 @@ void clustering_dac(std::vector<T> &data, int data_length, int N_max_size_extern
         data = left;
     }
     clustering(data, N_max_size_external_set, distance_measure);
+}
+
+
+/**
+* A try of a multithreaded implementation
+**/
+template <typename T>
+void clustering_dac_multithread(std::vector<T> *data, int data_length, int N_max_size_external_set, double (*distance_measure)(T&,T&), int max_depth, int depth)
+{
+    int half_length = static_cast<int>(data_length / 2);
+    if (half_length > N_max_size_external_set)
+    {
+        std::vector<T> left(data->begin(), data->begin()+half_length);
+        std::vector<T> right(data->begin()+half_length, data->end());
+
+        if (depth < max_depth)
+        {
+            // One thread for each division
+            int length_right = data_length-half_length;
+            int new_depth = depth+1;
+            std::thread thread_left(&clustering_dac_multithread<T>, &left, half_length, N_max_size_external_set, distance_measure, max_depth, new_depth);
+            std::thread thread_right(&clustering_dac_multithread<T>, &right, length_right, N_max_size_external_set, distance_measure, max_depth, new_depth);
+
+            // Joining threads
+            thread_left.join();
+            thread_right.join();
+        }else{
+            clustering_dac_multithread(&left, half_length, N_max_size_external_set, distance_measure, max_depth, depth);
+            clustering_dac_multithread(&right, data_length-half_length, N_max_size_external_set, distance_measure, max_depth, depth);
+        }
+
+        left.insert(
+            left.end(),
+            std::make_move_iterator(right.begin()),
+            std::make_move_iterator(right.end())
+        );
+        *data = left;
+    }
+    clustering(*data, N_max_size_external_set, distance_measure);
 }

@@ -1,7 +1,7 @@
 CC = g++
 CFLAGS = -O3 -std=gnu++17 -g -c -Wall
 TARGET = clustering_test
-LIBS = -lm -lstdc++
+LIBS = -pthread
 
 OBJECTS = $(patsubst %.cpp, %.o, $(wildcard *.cpp))
 HEADERS = $(wildcard *.h)
