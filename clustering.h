@@ -2,9 +2,11 @@
 #include<vector>
 #include<math.h>
 #include<iterator>
-
 #include <thread>
 
+/**
+* Implementation of the clustering algorithm
+**/
 template <typename T>
 void clustering(std::vector<T> &data, int N_max_size_external_set, double (*distance_measure)(T&,T&))
 {
@@ -192,6 +194,9 @@ void clustering(std::vector<T> &data, int N_max_size_external_set, double (*dist
     }
 }
 
+/**
+* Singlethreaded divide and conquer
+**/
 template <typename T>
 void clustering_dac(std::vector<T> &data, int data_length, int N_max_size_external_set, double (*distance_measure)(T&,T&))
 {
@@ -212,9 +217,8 @@ void clustering_dac(std::vector<T> &data, int data_length, int N_max_size_extern
     clustering(data, N_max_size_external_set, distance_measure);
 }
 
-
 /**
-* A multithreaded implementation
+* Multithreaded divide and conquer
 **/
 template <typename T>
 void clustering_dac_multithread(std::vector<T> *data, int data_length, int N_max_size_external_set, double (*distance_measure)(T&,T&), int max_depth, int depth = 0)
