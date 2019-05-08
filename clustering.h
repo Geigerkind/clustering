@@ -217,7 +217,7 @@ void clustering_dac(std::vector<T> &data, int data_length, int N_max_size_extern
 * A try of a multithreaded implementation
 **/
 template <typename T>
-void clustering_dac_multithread(std::vector<T> *data, int data_length, int N_max_size_external_set, double (*distance_measure)(T&,T&), int max_depth, int depth)
+void clustering_dac_multithread(std::vector<T> *data, int data_length, int N_max_size_external_set, double (*distance_measure)(T&,T&), int max_depth, int depth = 0)
 {
     int half_length = static_cast<int>(data_length / 2);
     if (half_length > N_max_size_external_set)

@@ -66,12 +66,10 @@ int main(int argc, char** argv)
         test_data.push_back(std::make_pair(i,j));
 
     int test_data_length = test_data.size();
-    int max_threading_depth = 4;
-    int initial_depth = 0;
     auto start = std::chrono::steady_clock::now();
 
     //clustering_dac(test_data, test_data_length, target_size, euclidian_distance);
-    clustering_dac_multithread(&test_data, test_data_length, target_size, euclidian_distance, max_threading_depth, initial_depth);
+    clustering_dac_multithread(&test_data, test_data_length, target_size, euclidian_distance, 4);
 
     auto end = std::chrono::steady_clock::now();
 
