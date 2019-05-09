@@ -7,6 +7,7 @@
 
 #include "clustering.h"
 
+
 /**
 * Functions to generate a graph output using python, just utility
 **/
@@ -17,10 +18,12 @@ std::ofstream python_init_graph(int grid_size, int target_size)
     stream << "fig = plt.figure()" << std::endl;
     return stream;
 }
-void python_plot(std::ofstream &stream, std::vector<std::pair<int,int>> &points, bool point = false)
+
+template<typename T>
+void python_plot(std::ofstream &stream, std::vector<std::pair<T,T>> &points, bool point = false)
 {
-    std::vector<int> xAxis;
-    std::vector<int> yAxis;
+    std::vector<T> xAxis;
+    std::vector<T> yAxis;
     for (auto entry : points)
     {
         xAxis.push_back(entry.first);
@@ -46,10 +49,11 @@ void python_generate(std::ofstream &stream, int grid_size, int target_size)
 /**
 * Euclidian distance measure used fore our tests
 **/
-double euclidian_distance(std::pair<int,int> &p1, std::pair<int,int> &p2)
+template<typename T>
+double euclidian_distance(std::pair<T,T> &p1, std::pair<T,T> &p2)
 {
-    int first_param = p1.first-p2.first;
-    int second_param = p1.second-p2.second;
+    T first_param = p1.first-p2.first;
+    T second_param = p1.second-p2.second;
     return sqrt(first_param*first_param + second_param*second_param);
 }
 
@@ -63,7 +67,7 @@ void test_data_grid(std::vector<std::pair<int,int>> &container, int grid_size)
         container.push_back(std::make_pair(i,j));
 }
 
-void test_data_schaffner_n1(std::vector<std::pair<int,int>> &container, int grid_size)
+void test_data_schaffner_n1(std::vector<std::pair<long long,long long>> &container, int grid_size)
 {
     for (int i=0; i<grid_size; ++i)
         container.push_back(std::make_pair(i*i, (i-2)*(i-2)));
@@ -74,7 +78,7 @@ int main(int argc, char** argv)
     int grid_size = std::stoi(argv[1]);
     int target_size = std::stoi(argv[2]);
 
-    std::vector<std::pair<int,int>> test_data;
+    std::vector<std::pair<long long,long long>> test_data;
     auto stream = python_init_graph(grid_size, target_size);
 
     //test_data_grid(test_data, grid_size);

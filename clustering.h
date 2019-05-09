@@ -37,7 +37,6 @@ void clustering(std::vector<T> &data, int N_max_size_external_set, double (*dist
     }
 
     // Step 3: Initialization
-    double min_distance;
     int cluster_solution_index;
     // Using symmetry here, still O(N/2 * N/2)
     for (int i=0; i<cluster_size; ++i)
@@ -75,12 +74,7 @@ void clustering(std::vector<T> &data, int N_max_size_external_set, double (*dist
                 double distance = 0.0;
                 for (auto &cluster_1_entry : cluster_1)
                 for (auto &cluster_2_entry : cluster_2)
-                {
-                    // Euklidian distance I suppose
-                    int first_param = cluster_1_entry.first-cluster_2_entry.first;
-                    int second_param = cluster_1_entry.second-cluster_2_entry.second;
-                    distance += sqrt(first_param*first_param + second_param*second_param);
-                }
+                    distance += distance_measure(cluster_1_entry, cluster_2_entry);
                 distance *= (1.0/(cluster_1_size*cluster_2.size()));
                 solution_set[cluster_solution_index][(cluster_size-1)-j] = std::move(distance);
             }
@@ -94,12 +88,7 @@ void clustering(std::vector<T> &data, int N_max_size_external_set, double (*dist
                 double distance = 0.0;
                 for (auto &cluster_1_entry : cluster_1)
                 for (auto &cluster_2_entry : cluster_2)
-                {
-                    // Euklidian distance I suppose
-                    int first_param = cluster_1_entry.first-cluster_2_entry.first;
-                    int second_param = cluster_1_entry.second-cluster_2_entry.second;
-                    distance += sqrt(first_param*first_param + second_param*second_param);
-                }
+                    distance += distance_measure(cluster_1_entry, cluster_2_entry);
                 distance *= (1.0/(cluster_1_size*cluster_2.size()));
                 solution_set[j][cluster_size-1-cluster_solution_index] = std::move(distance);
             }
@@ -110,7 +99,7 @@ void clustering(std::vector<T> &data, int N_max_size_external_set, double (*dist
         // Step 4: Find pair with minimal distance
         int min_distance_x = 0;
         int min_distance_y = 0;
-        min_distance = solution_set[0][0];
+        double min_distance = solution_set[0][0];
         int solution_set_real_size_x = solution_set.size();
         for (int x=0; x<solution_set_real_size_x; ++x)
         {
