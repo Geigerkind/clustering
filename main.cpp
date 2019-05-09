@@ -63,6 +63,12 @@ void test_data_grid(std::vector<std::pair<int,int>> &container, int grid_size)
         container.push_back(std::make_pair(i,j));
 }
 
+void test_data_schaffner_n1(std::vector<std::pair<int,int>> &container, int grid_size)
+{
+    for (int i=0; i<grid_size; ++i)
+        container.push_back(std::make_pair(i*i, (i-2)*(i-2)));
+}
+
 int main(int argc, char** argv)
 {
     int grid_size = std::stoi(argv[1]);
@@ -71,13 +77,15 @@ int main(int argc, char** argv)
     std::vector<std::pair<int,int>> test_data;
     auto stream = python_init_graph(grid_size, target_size);
 
-    test_data_grid(test_data, grid_size);
+    //test_data_grid(test_data, grid_size);
+    test_data_schaffner_n1(test_data, grid_size);
     int test_data_length = test_data.size();
 
     auto start = std::chrono::steady_clock::now();
 
+    clustering(test_data, target_size, euclidian_distance);
     //clustering_dac(test_data, test_data_length, target_size, euclidian_distance);
-    clustering_dac_multithread(&test_data, test_data_length, target_size, euclidian_distance, 4);
+    //clustering_dac_multithread(&test_data, test_data_length, target_size, euclidian_distance, 4);
 
     auto end = std::chrono::steady_clock::now();
 
