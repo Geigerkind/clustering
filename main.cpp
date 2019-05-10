@@ -5,6 +5,8 @@
 
 #include<fstream>
 #include<chrono>
+#include <algorithm>
+#include <random>
 
 #include "clustering.h"
 
@@ -88,11 +90,14 @@ int main(int argc, char** argv)
     //test_data_schaffner_n1(test_data, grid_size);
     int test_data_length = test_data.size();
 
+    unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
+    std::shuffle (test_data.begin(), test_data.end(), std::default_random_engine(seed));
+
     auto start = std::chrono::steady_clock::now();
 
     //clustering(test_data, target_size, test_data_length, euclidian_distance);
-    clustering_dac(test_data, test_data_length, target_size, euclidian_distance);
-    //clustering_dac_multithread(&test_data, test_data_length, target_size, euclidian_distance, 4);
+    //clustering_dac(test_data, test_data_length, target_size, euclidian_distance);
+    clustering_dac_multithread(&test_data, test_data_length, target_size, euclidian_distance, 4);
 
     auto end = std::chrono::steady_clock::now();
 
