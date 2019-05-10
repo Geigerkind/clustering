@@ -1,5 +1,6 @@
 #include<iostream>
 #include<vector>
+#include<list>
 #include<math.h>
 
 #include<fstream>
@@ -40,6 +41,7 @@ void python_plot(std::ofstream &stream, std::vector<std::pair<T,T>> &points, boo
         stream << yAxis[q] << ",";
     stream << yAxis[yAxis.size()-1] << "]" << (point ? ",'o'" : "") << ")" << std::endl;
 }
+
 void python_generate(std::ofstream &stream, int grid_size, int target_size)
 {
     stream << "fig.savefig('" << grid_size << "_" << target_size << ".png')" << std::endl;
@@ -60,7 +62,8 @@ double euclidian_distance(std::pair<T,T> &p1, std::pair<T,T> &p2)
 /**
 * A collection of test functions
 **/
-void test_data_grid(std::vector<std::pair<int,int>> &container, int grid_size)
+template<typename T>
+void test_data_grid(std::vector<std::pair<T,T>> &container, int grid_size)
 {
     for (int i=0; i<grid_size; ++i)
     for (int j=0; j<grid_size; ++j)
@@ -78,18 +81,18 @@ int main(int argc, char** argv)
     int grid_size = std::stoi(argv[1]);
     int target_size = std::stoi(argv[2]);
 
-    std::vector<std::pair<long long,long long>> test_data;
+    std::vector<std::pair<int,int>> test_data;
     auto stream = python_init_graph(grid_size, target_size);
 
-    //test_data_grid(test_data, grid_size);
-    test_data_schaffner_n1(test_data, grid_size);
+    test_data_grid(test_data, grid_size);
+    //test_data_schaffner_n1(test_data, grid_size);
     int test_data_length = test_data.size();
 
     auto start = std::chrono::steady_clock::now();
 
-    clustering(test_data, target_size, euclidian_distance);
+    //clustering(test_data, target_size, euclidian_distance);
     //clustering_dac(test_data, test_data_length, target_size, euclidian_distance);
-    //clustering_dac_multithread(&test_data, test_data_length, target_size, euclidian_distance, 4);
+    clustering_dac_multithread(&test_data, test_data_length, target_size, euclidian_distance, 4);
 
     auto end = std::chrono::steady_clock::now();
 

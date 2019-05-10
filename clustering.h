@@ -1,5 +1,6 @@
 #include<iostream>
 #include<vector>
+#include<list>
 #include<math.h>
 #include<iterator>
 #include <thread>
@@ -8,33 +9,22 @@
 * Implementation of the clustering algorithm
 **/
 template <typename T>
-void clustering(std::vector<T> &data, int N_max_size_external_set, double (*distance_measure)(T&,T&))
+void clustering(std::vector<T> &data, int N_max_size_external_set, int cluster_size, double (*distance_measure)(T&,T&))
 {
     // Step 1: 
     // Create a set of sets of clusters
     std::vector<std::vector<T>> c_cluster_set;
-    int cluster_size = data.size();
     c_cluster_set.reserve(cluster_size);
     
     for (auto &entry : data)
-    {
-        std::vector<T> cluster;
-        cluster.reserve(1);
-        cluster.push_back(entry);
-        c_cluster_set.push_back(std::move(cluster));
-    }
+        c_cluster_set.push_back(std::move(std::vector<T>(1, std::move(entry))));
+    std::vector<T>().swap(data);
 
     // Step 2: Goto step 5 if the set contains lesser or equal to max specified number
     std::vector<std::vector<double>> solution_set;
     solution_set.reserve(cluster_size);
     for (int i=0; i<cluster_size; ++i)
-    {
-        std::vector<double> inner_solution_set;
-        inner_solution_set.reserve(cluster_size-i);
-        for (int j=0; j<cluster_size-i-1; ++j)
-            inner_solution_set.push_back(0.0);
-        solution_set.push_back(std::move(inner_solution_set));
-    }
+        solution_set.push_back(std::move(std::vector<double>(cluster_size-i-1, 0.0)));
 
     // Step 3: Initialization
     int cluster_solution_index;
@@ -150,7 +140,6 @@ void clustering(std::vector<T> &data, int N_max_size_external_set, double (*dist
 
     // Step 5: Return set of center points of each cluster
     // Symmetry can also be exploited here, but worth the effort?
-    data.clear();
     data.reserve(N_max_size_external_set);
     for(auto &cluster : c_cluster_set)
     {
@@ -194,6 +183,8 @@ void clustering_dac(std::vector<T> &data, int data_length, int N_max_size_extern
     {
         std::vector<T> left(data.begin(), data.begin()+half_length);
         std::vector<T> right(data.begin()+half_length, data.end());
+        std::vector<T>().swap(data);
+
         clustering_dac(left, half_length, N_max_size_external_set, distance_measure);
         clustering_dac(right, data_length-half_length, N_max_size_external_set, distance_measure);
         left.insert(
@@ -201,9 +192,13 @@ void clustering_dac(std::vector<T> &data, int data_length, int N_max_size_extern
             std::make_move_iterator(right.begin()),
             std::make_move_iterator(right.end())
         );
+        std::vector<T>().swap(right);
         data = left;
+
+        clustering(data, N_max_size_external_set, 2*N_max_size_external_set, distance_measure);
+        return;
     }
-    clustering(data, N_max_size_external_set, distance_measure);
+    clustering(data, N_max_size_external_set, data_length, distance_measure);
 }
 
 /**
@@ -217,6 +212,7 @@ void clustering_dac_multithread(std::vector<T> *data, int data_length, int N_max
     {
         std::vector<T> left(data->begin(), data->begin()+half_length);
         std::vector<T> right(data->begin()+half_length, data->end());
+        std::vector<T>().swap(*data);
 
         if (depth < max_depth)
         {
@@ -237,7 +233,11 @@ void clustering_dac_multithread(std::vector<T> *data, int data_length, int N_max
             std::make_move_iterator(right.begin()),
             std::make_move_iterator(right.end())
         );
+        std::vector<T>().swap(right);
         *data = left;
+
+        clustering(*data, N_max_size_external_set, 2*N_max_size_external_set, distance_measure);
+        return;
     }
-    clustering(*data, N_max_size_external_set, distance_measure);
+    clustering(*data, N_max_size_external_set, data_length, distance_measure);
 }
