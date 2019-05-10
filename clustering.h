@@ -182,7 +182,8 @@ void clustering_dac(std::vector<T> &data, int data_length, int N_max_size_extern
     if (half_length > N_max_size_external_set)
     {
         std::vector<T> left(data.begin(), data.begin()+half_length);
-        std::vector<T> right(data.begin()+half_length, data.end());
+        data.erase(data.begin(), data.begin()+half_length);
+        std::vector<T> right(data);
         std::vector<T>().swap(data);
 
         clustering_dac(left, half_length, N_max_size_external_set, distance_measure);
@@ -211,7 +212,8 @@ void clustering_dac_multithread(std::vector<T> *data, int data_length, int N_max
     if (half_length > N_max_size_external_set)
     {
         std::vector<T> left(data->begin(), data->begin()+half_length);
-        std::vector<T> right(data->begin()+half_length, data->end());
+        data->erase(data->begin(), data->begin()+half_length);
+        std::vector<T> right(*data);
         std::vector<T>().swap(*data);
 
         if (depth < max_depth)
