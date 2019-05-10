@@ -97,7 +97,7 @@ int main(int argc, char** argv)
 
     //clustering(test_data, target_size, test_data_length, euclidian_distance);
     //clustering_dac(&test_data, test_data_length, target_size, euclidian_distance, 4);
-    clustering_batch(&test_data, test_data_length, target_size, euclidian_distance, 1500, 14);
+    clustering_batch(&test_data, test_data_length, target_size, euclidian_distance, 360, 14);
 
     auto end = std::chrono::steady_clock::now();
 

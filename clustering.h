@@ -218,9 +218,10 @@ void clustering_dac(std::vector<T> *data, int data_length, int N_max_size_extern
 /**
 * Multithreaded packet based approximation
 * Note: num_threads = 1 => Singlethread
+* Note: batch_length ~= 20*N_max_size_external_set, the more the longer this algorithm will take, i. e. it more and more approximate the global clustering algorithm
 **/
 template <typename T>
-void clustering_process_batches(std::vector<T> *data, int data_length, int N_max_size_external_set, double (*distance_measure)(T&,T&), int batch_length = 2500)
+void clustering_process_batches(std::vector<T> *data, int data_length, int N_max_size_external_set, double (*distance_measure)(T&,T&), int batch_length)
 {
     std::vector<T> result;
     while (data_length >= 2*batch_length)
@@ -250,7 +251,7 @@ void clustering_process_batches(std::vector<T> *data, int data_length, int N_max
 }
 
 template <typename T>
-void clustering_batch(std::vector<T> *data, int data_length, int N_max_size_external_set, double (*distance_measure)(T&,T&), int batch_length = 2500, int num_threads = 16)
+void clustering_batch(std::vector<T> *data, int data_length, int N_max_size_external_set, double (*distance_measure)(T&,T&), int batch_length, int num_threads = 16)
 {
     // Base case
     if (data_length <= batch_length)
