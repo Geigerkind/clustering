@@ -90,7 +90,7 @@ int main(int argc, char** argv)
 
     auto start = std::chrono::steady_clock::now();
 
-    //clustering(test_data, target_size, euclidian_distance);
+    //clustering(test_data, target_size, test_data_length, euclidian_distance);
     clustering_dac(test_data, test_data_length, target_size, euclidian_distance);
     //clustering_dac_multithread(&test_data, test_data_length, target_size, euclidian_distance, 4);
 
