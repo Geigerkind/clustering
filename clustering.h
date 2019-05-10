@@ -173,40 +173,11 @@ void clustering(std::vector<T> &data, int N_max_size_external_set, int cluster_s
 }
 
 /**
-* Singlethreaded divide and conquer
-**/
-template <typename T>
-void clustering_dac(std::vector<T> &data, int data_length, int N_max_size_external_set, double (*distance_measure)(T&,T&))
-{
-    int half_length = static_cast<int>(data_length / 2);
-    if (half_length > N_max_size_external_set)
-    {
-        std::vector<T> left(data.begin(), data.begin()+half_length);
-        data.erase(data.begin(), data.begin()+half_length);
-        std::vector<T> right(data);
-        std::vector<T>().swap(data);
-
-        clustering_dac(left, half_length, N_max_size_external_set, distance_measure);
-        clustering_dac(right, data_length-half_length, N_max_size_external_set, distance_measure);
-        left.insert(
-            left.end(),
-            std::make_move_iterator(right.begin()),
-            std::make_move_iterator(right.end())
-        );
-        std::vector<T>().swap(right);
-        data = left;
-
-        clustering(data, N_max_size_external_set, 2*N_max_size_external_set, distance_measure);
-        return;
-    }
-    clustering(data, N_max_size_external_set, data_length, distance_measure);
-}
-
-/**
 * Multithreaded divide and conquer
+* Note: Depth = 0 => Singlethread
 **/
 template <typename T>
-void clustering_dac_multithread(std::vector<T> *data, int data_length, int N_max_size_external_set, double (*distance_measure)(T&,T&), int max_depth, int depth = 0)
+void clustering_dac(std::vector<T> *data, int data_length, int N_max_size_external_set, double (*distance_measure)(T&,T&), int max_depth, int depth = 0)
 {
     int half_length = static_cast<int>(data_length / 2);
     if (half_length > N_max_size_external_set)
@@ -219,15 +190,15 @@ void clustering_dac_multithread(std::vector<T> *data, int data_length, int N_max
         if (depth < max_depth)
         {
             // One thread for each division
-            std::thread thread_left(&clustering_dac_multithread<T>, &left, half_length, N_max_size_external_set, distance_measure, max_depth, depth+1);
-            std::thread thread_right(&clustering_dac_multithread<T>, &right, data_length-half_length, N_max_size_external_set, distance_measure, max_depth, depth+1);
+            std::thread thread_left(&clustering_dac<T>, &left, half_length, N_max_size_external_set, distance_measure, max_depth, depth+1);
+            std::thread thread_right(&clustering_dac<T>, &right, data_length-half_length, N_max_size_external_set, distance_measure, max_depth, depth+1);
 
             // Joining threads
             thread_left.join();
             thread_right.join();
         }else{
-            clustering_dac_multithread(&left, half_length, N_max_size_external_set, distance_measure, max_depth, depth);
-            clustering_dac_multithread(&right, data_length-half_length, N_max_size_external_set, distance_measure, max_depth, depth);
+            clustering_dac(&left, half_length, N_max_size_external_set, distance_measure, max_depth, depth);
+            clustering_dac(&right, data_length-half_length, N_max_size_external_set, distance_measure, max_depth, depth);
         }
 
         left.insert(
@@ -242,4 +213,81 @@ void clustering_dac_multithread(std::vector<T> *data, int data_length, int N_max
         return;
     }
     clustering(*data, N_max_size_external_set, data_length, distance_measure);
+}
+
+/**
+* Multithreaded packet based approximation
+* Note: num_threads = 1 => Singlethread
+**/
+template <typename T>
+void clustering_process_batches(std::vector<T> *data, int data_length, int N_max_size_external_set, double (*distance_measure)(T&,T&), int batch_length = 2500)
+{
+    std::vector<T> result;
+    while (data_length >= 2*batch_length)
+    {
+        std::vector<T> splice(data->begin(), data->begin()+batch_length);
+        data->erase(data->begin(), data->begin()+batch_length);
+
+        clustering(splice, N_max_size_external_set, batch_length, distance_measure);
+        result.insert(
+            result.end(),
+            std::make_move_iterator(splice.begin()),
+            std::make_move_iterator(splice.end())
+        );
+
+        data_length -= batch_length;
+    }
+
+    std::vector<T> splice(data->begin(), data->begin()+data_length);
+    clustering(splice, N_max_size_external_set, data_length, distance_measure);
+    result.insert(
+        result.end(),
+        std::make_move_iterator(splice.begin()),
+        std::make_move_iterator(splice.end())
+    );
+
+    *data = result;
+}
+
+template <typename T>
+void clustering_batch(std::vector<T> *data, int data_length, int N_max_size_external_set, double (*distance_measure)(T&,T&), int batch_length = 2500, int num_threads = 16)
+{
+    // Base case
+    if (data_length <= batch_length)
+    {
+        clustering(*data, N_max_size_external_set, data_length, distance_measure);
+        return;
+    }
+
+
+    int data_per_thread = static_cast<int>(data_length/num_threads);
+
+    std::vector<std::vector<T>> splices;
+    std::vector<std::thread> threads;
+    splices.reserve(num_threads);
+    threads.reserve(num_threads);
+    for (int i=0; i<num_threads-1; ++i)
+    {
+        splices.push_back(std::move(std::vector<T>(data->begin(), data->begin()+data_per_thread)));
+        data->erase(data->begin(), data->begin()+data_per_thread);
+        threads.push_back(std::move(std::thread(&clustering_process_batches<T>, &splices[i], data_per_thread, N_max_size_external_set, distance_measure, batch_length)));
+        data_length -= data_per_thread;
+    }
+    splices.push_back(std::move(std::vector<T>(data->begin(), data->end())));
+    data->erase(data->begin(), data->end());
+    threads.push_back(std::move(std::thread(&clustering_process_batches<T>, &splices[num_threads-1], data_length, N_max_size_external_set, distance_measure, batch_length)));
+
+    for (int i=0; i<num_threads; ++i)
+        threads[i].join();
+
+    for (int i=0; i<num_threads; ++i)
+    {
+        data->insert(
+            data->end(),
+            std::make_move_iterator(splices[i].begin()),
+            std::make_move_iterator(splices[i].end())
+        );
+        std::vector<T>().swap(splices[i]);
+    }
+    clustering_batch(data, data->size(), N_max_size_external_set, distance_measure, batch_length, num_threads);
 }
